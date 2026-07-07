@@ -103,4 +103,4 @@ Part 3 production readiness review:
 - Rate limiting uses the existing Spring Security filter chain plus Java `ConcurrentHashMap` counters; no bucket/rate-limit library was introduced.
 - Strong password validation uses Jakarta Bean Validation already present through `spring-boot-starter-validation`.
 - Secure headers, CORS, CSRF behavior, and endpoint authorization use Spring Security already present in the project.
-- Docker image choices are official or vendor-published images: Maven, Eclipse Temurin, Node, nginx, PostgreSQL, Redis, Bitnami Kafka, and Elastic Elasticsearch. Image tags are pinned to concrete versions where practical, but production deployments should evaluate digest pinning as a release-management step.
+- Docker image choices are official or vendor-published images: Maven, Eclipse Temurin, Node, nginx, PostgreSQL, Redis, Apache Kafka, and Elastic Elasticsearch. Image tags are pinned to concrete versions where practical, but production deployments should evaluate digest pinning as a release-management step.
