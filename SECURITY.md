@@ -39,4 +39,4 @@ Include:
 - Do not publish Docker images, generated artifacts, screenshots, or API documentation that reveal proprietary workflows unless approved.
 - Keep production Swagger/OpenAPI disabled unless access is protected.
 - Require code owner review and branch protection before merging to protected branches.
-- Keep GitHub Actions permissions to the minimum needed for each workflow.
+- Keep GitHub Actions permissions to the minimum needed for each workflow. 
