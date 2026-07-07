@@ -1,21 +1,22 @@
-# Code of Conduct
+# Internal Conduct Policy
 
-## Our Pledge
-
-We aim to make this project a respectful, professional, and welcoming environment.
+This proprietary project is maintained by authorized contributors only.
 
 ## Expected Behavior
 
-- Be considerate and constructive.
+- Be considerate, constructive, and professional.
 - Focus feedback on code, design, security, reliability, and maintainability.
-- Respect different experience levels and communication styles.
+- Protect confidential business, technical, customer, and operational information.
 
 ## Unacceptable Behavior
 
 - Harassment, intimidation, or personal attacks.
-- Publishing private information without consent.
+- Publishing private or proprietary information without authorization.
+- Sharing repository contents, credentials, vulnerability details, or internal documentation outside approved channels.
 - Disruptive or bad-faith participation.
 
 ## Enforcement
 
-Maintainers may remove comments, close issues, or restrict participation when conduct harms the project community.
+Maintainers may remove comments, close issues, revoke access, or escalate to
+the appropriate internal owner when conduct or disclosure risk harms the
+project.

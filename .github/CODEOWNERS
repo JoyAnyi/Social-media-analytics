@@ -1,0 +1,4 @@
+# Proprietary project ownership.
+# Replace @your-org/security-and-maintainers with the real GitHub team or users,
+# then enable "Require review from Code Owners" in branch protection.
+* @your-org/security-and-maintainers

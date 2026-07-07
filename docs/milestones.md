@@ -78,7 +78,7 @@ Scope:
 - Security, observability, and deployment readiness pass.
 
 Part 3 hardening gate completed:
-- Repository governance files: license, contributing guide, changelog, security policy, code of conduct, issue templates, PR template, and CI workflow.
+- Internal governance files: proprietary license, internal development guide, changelog, security policy, conduct policy, issue templates, PR template, and CI workflow.
 - Expanded `.gitignore`, root `.env.example`, backend/frontend Dockerfiles, and full-stack Docker Compose configuration.
 - Production profile with environment-driven settings and Flyway validation.
 - Explicit CORS, configurable WebSocket origins, secure headers, strong password validation, and rate limiting for sensitive routes.

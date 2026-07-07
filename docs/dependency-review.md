@@ -12,7 +12,7 @@ Policy:
 
 | Dependency | Version | Purpose | Essential | Security / maintenance notes |
 | --- | ---: | --- | --- | --- |
-| `react` | `18.3.1` | Core UI framework required by the project stack. | Yes | Widely adopted and maintained by Meta/community. |
+| `react` | `18.3.1` | Core UI framework required by the project stack. | Yes | Widely adopted and maintained by Meta and the React ecosystem. |
 | `react-dom` | `18.3.1` | Browser rendering for React. | Yes | Same maintenance profile as React. |
 | `chart.js` | `4.4.6` | Dashboard chart rendering for sentiment and later analytics visualizations. Native canvas implementation would be possible but would create custom charting risk and accessibility/maintenance burden. | Yes for analytics UI | Widely adopted charting package with active maintenance; use directly without wrapper to reduce dependency count. |
 

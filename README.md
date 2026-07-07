@@ -2,6 +2,9 @@
 
 Production-oriented SaaS analytics platform for simulated social media ingestion, Kafka-backed processing, live dashboards, alerting, search, reporting, and administration.
 
+Proprietary and confidential. Unauthorized copying, redistribution, hosting,
+or derivative use is prohibited.
+
 ## Current Milestone
 
 Milestones 1 through 3 are complete, plus the Part 3 production-readiness foundation:
@@ -9,7 +12,7 @@ Milestones 1 through 3 are complete, plus the Part 3 production-readiness founda
 - Spring Boot backend with authentication, refresh token rotation, user roles, audit logs, feed simulation, post enrichment, dashboard APIs, WebSocket updates, secure headers, explicit CORS, rate limiting, and health checks.
 - React / TypeScript / Vite frontend with authenticated flow, dashboard widgets, live WebSocket updates, and production nginx image.
 - Docker Compose stack for backend, frontend, PostgreSQL, Kafka, Redis, and Elasticsearch.
-- Flyway migrations, focused backend/frontend tests, dependency review, and repository governance files.
+- Flyway migrations, focused backend/frontend tests, dependency review, and internal repository governance files.
 
 The milestone plan is tracked in [docs/milestones.md](docs/milestones.md).
 
