@@ -60,6 +60,8 @@ Self-review outcome:
 
 ## Milestone 4: Search, Alerts, Notifications, and Reporting
 
+Status: Pending
+
 Scope:
 - Elasticsearch indexing and filtered search.
 - Alert rule evaluation and notification lifecycle.
@@ -67,8 +69,22 @@ Scope:
 
 ## Milestone 5: Administration, Audit, Hardening, and Release
 
+Status: In progress
+
 Scope:
 - Admin user management.
 - Audit log viewer.
 - End-to-end Docker verification.
 - Security, observability, and deployment readiness pass.
+
+Part 3 hardening gate completed:
+- Repository governance files: license, contributing guide, changelog, security policy, code of conduct, issue templates, PR template, and CI workflow.
+- Expanded `.gitignore`, root `.env.example`, backend/frontend Dockerfiles, and full-stack Docker Compose configuration.
+- Production profile with environment-driven settings and Flyway validation.
+- Explicit CORS, configurable WebSocket origins, secure headers, strong password validation, and rate limiting for sensitive routes.
+- Production readiness documentation covering security, consistency, reliability, and deployment notes.
+
+Self-review outcome:
+- Narrowed credential ignore patterns after detecting that a broad `*token*` rule hid refresh token source files.
+- Returned rate-limit failures directly from the servlet filter as structured 429 API errors.
+- Kept rate limiting dependency-free by using existing Spring filter infrastructure and Java concurrency primitives.

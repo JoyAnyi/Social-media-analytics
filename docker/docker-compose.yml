@@ -1,41 +1,124 @@
 services:
+  backend:
+    build:
+      context: ../backend
+    container_name: socialanalytics-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${DATABASE_NAME:-socialanalytics}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-socialanalytics}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD must be set}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      APP_KAFKA_ENABLED: "true"
+      RAW_POST_TOPIC: posts.raw
+      PROCESSED_POST_TOPIC: posts.processed
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ELASTICSEARCH_URIS: http://elasticsearch:9200
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      WEBSOCKET_ALLOWED_ORIGIN_PATTERNS: ${WEBSOCKET_ALLOWED_ORIGIN_PATTERNS:-http://localhost:5173}
+      RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW:-1m}
+      LOGIN_RATE_LIMIT: ${LOGIN_RATE_LIMIT:-10}
+      REGISTRATION_RATE_LIMIT: ${REGISTRATION_RATE_LIMIT:-5}
+      PASSWORD_RESET_RATE_LIMIT: ${PASSWORD_RESET_RATE_LIMIT:-5}
+      REPORT_GENERATION_RATE_LIMIT: ${REPORT_GENERATION_RATE_LIMIT:-20}
+      PUBLIC_DOCS_ENABLED: ${PUBLIC_DOCS_ENABLED:-false}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      - socialanalytics-net
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+
+  frontend:
+    build:
+      context: ../frontend
+    container_name: socialanalytics-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - socialanalytics-net
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
   postgres:
     image: postgres:16-alpine
     container_name: socialanalytics-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: socialanalytics
-      POSTGRES_USER: socialanalytics
-      POSTGRES_PASSWORD: socialanalytics
+      POSTGRES_DB: ${DATABASE_NAME:-socialanalytics}
+      POSTGRES_USER: ${DATABASE_USERNAME:-socialanalytics}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD must be set}
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U socialanalytics -d socialanalytics"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - socialanalytics-net
+    security_opt:
+      - no-new-privileges:true
 
   redis:
     image: redis:7-alpine
     container_name: socialanalytics-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - socialanalytics-net
+    command: ["redis-server", "--appendonly", "yes", "--protected-mode", "yes"]
+    security_opt:
+      - no-new-privileges:true
 
   kafka:
     image: bitnami/kafka:3.8
     container_name: socialanalytics-kafka
+    restart: unless-stopped
     environment:
       KAFKA_CFG_NODE_ID: 1
       KAFKA_CFG_PROCESS_ROLES: broker,controller
       KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
       ALLOW_PLAINTEXT_LISTENER: "yes"
@@ -43,10 +126,20 @@ services:
       - "9092:9092"
     volumes:
       - kafka-data:/bitnami/kafka
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - socialanalytics-net
+    security_opt:
+      - no-new-privileges:true
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
     container_name: socialanalytics-elasticsearch
+    restart: unless-stopped
     environment:
       discovery.type: single-node
       xpack.security.enabled: "false"
@@ -55,8 +148,22 @@ services:
       - "9200:9200"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    networks:
+      - socialanalytics-net
+    security_opt:
+      - no-new-privileges:true
 
 volumes:
   postgres-data:
+  redis-data:
   kafka-data:
   elasticsearch-data:
+
+networks:
+  socialanalytics-net:
+    driver: bridge

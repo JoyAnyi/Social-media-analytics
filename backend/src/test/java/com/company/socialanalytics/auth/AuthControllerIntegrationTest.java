@@ -30,7 +30,7 @@ class AuthControllerIntegrationTest {
                 "analyst@example.com",
                 "analyst",
                 "Analytics Lead",
-                "correct horse battery"
+                "Correct-horse-battery-1"
         );
 
         String registerBody = mockMvc.perform(post("/api/v1/auth/register")
@@ -45,7 +45,7 @@ class AuthControllerIntegrationTest {
         assertThat(registerResponse.accessToken()).isNotBlank();
         assertThat(registerResponse.refreshToken()).isNotBlank();
 
-        LoginRequest loginRequest = new LoginRequest("analyst@example.com", "correct horse battery");
+        LoginRequest loginRequest = new LoginRequest("analyst@example.com", "Correct-horse-battery-1");
         String loginBody = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
@@ -58,5 +58,20 @@ class AuthControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/users/me")
                         .header("Authorization", "Bearer " + loginResponse.accessToken()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void rejectsWeakRegistrationPassword() throws Exception {
+        RegisterRequest registerRequest = new RegisterRequest(
+                "weak-password@example.com",
+                "weakpassword",
+                "Weak Password",
+                "password"
+        );
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isBadRequest());
     }
 }

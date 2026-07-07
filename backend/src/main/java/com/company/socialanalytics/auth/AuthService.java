@@ -16,7 +16,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.HexFormat;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,8 +82,12 @@ public class AuthService {
     @Transactional
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmailIgnoreCase(request.email())
-                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+                .orElseThrow(() -> {
+                    auditService.record(null, "AUTH_LOGIN_FAILED", "Login failed for unknown email");
+                    return new BadCredentialsException("Invalid email or password");
+                });
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            auditService.record(user.getId(), "AUTH_LOGIN_FAILED", "Login failed");
             throw new BadCredentialsException("Invalid email or password");
         }
         user.recordLogin(Instant.now(clock));
@@ -130,7 +133,7 @@ public class AuthService {
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException ex) {
-            return Base64.getEncoder().encodeToString(token.getBytes(StandardCharsets.UTF_8));
+            throw new IllegalStateException("SHA-256 hashing is unavailable", ex);
         }
     }
 }

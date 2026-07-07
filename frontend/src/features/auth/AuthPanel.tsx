@@ -10,7 +10,7 @@ interface AuthPanelProps {
 export function AuthPanel({ onAuthenticated }: AuthPanelProps) {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('analyst@example.com');
-  const [password, setPassword] = useState('correct horse battery');
+  const [password, setPassword] = useState('');
   const [username, setUsername] = useState('analyst');
   const [displayName, setDisplayName] = useState('Analytics Lead');
   const [isSubmitting, setIsSubmitting] = useState(false);

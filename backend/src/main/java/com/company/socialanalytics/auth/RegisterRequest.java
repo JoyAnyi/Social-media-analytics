@@ -12,6 +12,12 @@ public record RegisterRequest(
         @Pattern(regexp = "^[a-zA-Z0-9_.-]+$", message = "must contain only letters, numbers, dots, dashes, and underscores")
         String username,
         @NotBlank @Size(min = 2, max = 160) String displayName,
-        @NotBlank @Size(min = 12, max = 128) String password
+        @NotBlank
+        @Size(min = 12, max = 128)
+        @Pattern(
+                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$",
+                message = "must include uppercase, lowercase, number, and special character"
+        )
+        String password
 ) {
 }

@@ -1,0 +1,10 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+app:
+  security:
+    public-docs-enabled: true
+  kafka:
+    enabled: true

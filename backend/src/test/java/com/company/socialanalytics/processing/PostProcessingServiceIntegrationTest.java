@@ -46,7 +46,8 @@ class PostProcessingServiceIntegrationTest {
         assertThat(response.mentions()).contains("marketwatcher");
         assertThat(response.keywords()).contains("analytics", "dashboard", "momentum");
         assertThat(duplicate.externalId()).isEqualTo(response.externalId());
-        assertThat(socialPostRepository.count()).isEqualTo(1);
+        assertThat(socialPostRepository.findWithDetailsByExternalId(event.externalId())).isPresent();
+        assertThat(socialPostRepository.countByExternalId(event.externalId())).isEqualTo(1);
     }
 
     @Test

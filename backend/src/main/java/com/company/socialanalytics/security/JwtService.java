@@ -7,9 +7,11 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Set;
@@ -17,6 +19,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,9 +31,14 @@ public class JwtService {
     public JwtService(
             @Value("${app.security.jwt-secret}") String secret,
             @Value("${app.security.access-token-ttl}") Duration accessTokenTtl,
-            Clock clock
+            Clock clock,
+            Environment environment
     ) {
-        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        byte[] secretBytes = resolveSecretBytes(secret, environment);
+        if (secretBytes.length < 32) {
+            throw new IllegalStateException("JWT_SECRET must be set to at least 32 bytes");
+        }
+        this.secretKey = Keys.hmacShaKeyFor(secretBytes);
         this.accessTokenTtl = accessTokenTtl;
         this.clock = clock;
     }
@@ -65,5 +73,17 @@ public class JwtService {
 
     public Duration accessTokenTtl() {
         return accessTokenTtl;
+    }
+
+    private byte[] resolveSecretBytes(String secret, Environment environment) {
+        if (secret != null && !secret.isBlank()) {
+            return secret.getBytes(StandardCharsets.UTF_8);
+        }
+        if (Arrays.asList(environment.getActiveProfiles()).contains("test")) {
+            byte[] generated = new byte[32];
+            new SecureRandom().nextBytes(generated);
+            return generated;
+        }
+        throw new IllegalStateException("JWT_SECRET must be set to at least 32 bytes");
     }
 }

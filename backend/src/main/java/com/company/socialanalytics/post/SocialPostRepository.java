@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface SocialPostRepository extends JpaRepository<SocialPost, UUID> {
     boolean existsByExternalId(String externalId);
 
+    long countByExternalId(String externalId);
+
     @EntityGraph(attributePaths = {"hashtags", "keywords", "mentions", "sentimentAnalysis"})
     Optional<SocialPost> findWithDetailsByExternalId(String externalId);
 

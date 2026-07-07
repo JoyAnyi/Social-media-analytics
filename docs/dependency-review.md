@@ -78,7 +78,6 @@ Spring Boot dependency versions are controlled by the pinned `spring-boot-starte
 
 Deferred until their milestone code requires them:
 - Kafka test support.
-- Spring WebSocket.
 - Spring Data Redis.
 - Spring Data Elasticsearch.
 - Testcontainers.
@@ -98,3 +97,10 @@ Milestone 3 review refinements:
 - Spring WebSocket resolves to Spring Framework WebSocket support managed by the pinned Spring Boot BOM.
 - The frontend uses native browser `WebSocket`, so no npm dependency was added for live dashboard transport.
 - WebSocket origins are configuration-driven through `WEBSOCKET_ALLOWED_ORIGIN_PATTERNS`; wildcard origins are not used by default.
+
+Part 3 production readiness review:
+- No new npm or Maven dependencies were added.
+- Rate limiting uses the existing Spring Security filter chain plus Java `ConcurrentHashMap` counters; no bucket/rate-limit library was introduced.
+- Strong password validation uses Jakarta Bean Validation already present through `spring-boot-starter-validation`.
+- Secure headers, CORS, CSRF behavior, and endpoint authorization use Spring Security already present in the project.
+- Docker image choices are official or vendor-published images: Maven, Eclipse Temurin, Node, nginx, PostgreSQL, Redis, Bitnami Kafka, and Elastic Elasticsearch. Image tags are pinned to concrete versions where practical, but production deployments should evaluate digest pinning as a release-management step.

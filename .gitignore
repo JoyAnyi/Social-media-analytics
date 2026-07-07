@@ -1,13 +1,59 @@
+# Operating systems
 .DS_Store
-node_modules/
-.npm-cache/
-.m2-cache/
-.tools/
-dist/
+Thumbs.db
+
+# Java / Maven
 target/
+*.class
+*.log
+.m2-cache/
+
+# Node / frontend
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.npm-cache/
+
+# Environment and local configuration
 .env
+.env.*
+!.env.example
+*.local
+application-local.yml
+
+# Secrets and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+*.secret
+*.token
+secrets/
+tokens/
+*.bak
+*.backup
+
+# IDEs
 .idea/
 .vscode/
-*.log
-*.tsbuildinfo
-README.md
+*.iml
+
+# Logs and temp files
+logs/
+tmp/
+temp/
+.tools/
+
+# Docker runtime data
+docker-data/
+*.pid
+git rm -r --cached docker
+
+# Test artifacts
+playwright-report/
+test-results/
+screenshots/
+recordings/
