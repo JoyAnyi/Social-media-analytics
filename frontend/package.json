@@ -1,0 +1,35 @@
+{
+  "name": "social-analytics-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "chart.js": "4.4.6",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "16.1.0",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@vitejs/plugin-react": "4.7.0",
+    "autoprefixer": "10.4.20",
+    "eslint": "9.39.4",
+    "eslint-plugin-react-hooks": "5.0.0",
+    "eslint-plugin-react-refresh": "0.4.14",
+    "jsdom": "25.0.1",
+    "postcss": "8.5.16",
+    "tailwindcss": "3.4.15",
+    "typescript": "5.6.3",
+    "vite": "7.3.6",
+    "vitest": "4.1.10"
+  }
+}

@@ -1,0 +1,60 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: socialanalytics
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/socialanalytics}
+    username: ${DATABASE_USERNAME:socialanalytics}
+    password: ${DATABASE_PASSWORD:socialanalytics}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.company.socialanalytics.*
+        spring.json.value.default.type: com.company.socialanalytics.feed.RawPostEvent
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+    elasticsearch:
+      repositories:
+        enabled: true
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET:change-me-change-me-change-me-change-me-change-me}
+    access-token-ttl: ${ACCESS_TOKEN_TTL:15m}
+    refresh-token-ttl: ${REFRESH_TOKEN_TTL:30d}
+  kafka:
+    enabled: ${APP_KAFKA_ENABLED:true}
+    raw-post-topic: ${RAW_POST_TOPIC:posts.raw}
+    processed-post-topic: ${PROCESSED_POST_TOPIC:posts.processed}
+    consumer-group-id: ${KAFKA_CONSUMER_GROUP_ID:socialanalytics-post-processing}
+  websocket:
+    allowed-origin-patterns: ${WEBSOCKET_ALLOWED_ORIGIN_PATTERNS:http://localhost:5173,http://localhost:8080}
