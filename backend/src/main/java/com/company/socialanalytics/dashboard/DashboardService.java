@@ -44,6 +44,11 @@ public class DashboardService {
 
     @Transactional(readOnly = true)
     public DashboardSummary summary() {
+        return summary(true);
+    }
+
+    @Transactional(readOnly = true)
+    public DashboardSummary summary(boolean includeSystemHealth) {
         Instant now = clock.instant();
         long totalPosts = socialPostRepository.count();
         long postsToday = socialPostRepository.countByPublishedAtAfter(now.truncatedTo(ChronoUnit.DAYS));
@@ -60,7 +65,7 @@ public class DashboardService {
                 topMetrics(socialPostRepository.countByPlatform()),
                 topMetrics(socialPostRepository.topAuthors(PageRequest.of(0, 8))),
                 latestPosts(),
-                systemHealthService.snapshot(),
+                includeSystemHealth ? systemHealthService.snapshot() : null,
                 now
         );
     }

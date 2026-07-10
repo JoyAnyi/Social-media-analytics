@@ -21,6 +21,7 @@ coverage/
 !.env.example
 *.local
 application-local.yml
+.local-data/
 
 # Secrets and credentials
 *.pem
@@ -50,7 +51,6 @@ temp/
 # Docker runtime data
 docker-data/
 *.pid
-git rm -r --cached docker
 
 # Test artifacts
 playwright-report/

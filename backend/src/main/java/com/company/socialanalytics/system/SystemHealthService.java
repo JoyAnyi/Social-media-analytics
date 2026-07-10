@@ -25,7 +25,9 @@ public class SystemHealthService {
     private final AppKafkaProperties appKafkaProperties;
     private final String redisHost;
     private final int redisPort;
+    private final boolean redisEnabled;
     private final String elasticsearchUri;
+    private final boolean elasticsearchEnabled;
     private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(1)).build();
 
     public SystemHealthService(
@@ -34,14 +36,18 @@ public class SystemHealthService {
             AppKafkaProperties appKafkaProperties,
             @Value("${spring.data.redis.host}") String redisHost,
             @Value("${spring.data.redis.port}") int redisPort,
-            @Value("${spring.elasticsearch.uris}") String elasticsearchUri
+            @Value("${app.redis.enabled:true}") boolean redisEnabled,
+            @Value("${spring.elasticsearch.uris}") String elasticsearchUri,
+            @Value("${app.elasticsearch.enabled:true}") boolean elasticsearchEnabled
     ) {
         this.dataSource = dataSource;
         this.kafkaProperties = kafkaProperties;
         this.appKafkaProperties = appKafkaProperties;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
+        this.redisEnabled = redisEnabled;
         this.elasticsearchUri = elasticsearchUri;
+        this.elasticsearchEnabled = elasticsearchEnabled;
     }
 
     public SystemHealthView snapshot() {
@@ -79,6 +85,9 @@ public class SystemHealthService {
     }
 
     private String redisStatus() {
+        if (!redisEnabled) {
+            return "DISABLED";
+        }
         try (Socket socket = new Socket()) {
             socket.connect(new InetSocketAddress(redisHost, redisPort), 1000);
             return "UP";
@@ -88,6 +97,9 @@ public class SystemHealthService {
     }
 
     private String elasticsearchStatus() {
+        if (!elasticsearchEnabled) {
+            return "DISABLED";
+        }
         try {
             HttpRequest request = HttpRequest.newBuilder(URI.create(elasticsearchUri))
                     .timeout(Duration.ofSeconds(1))

@@ -21,7 +21,12 @@ spring:
 app:
   security:
     jwt-secret: ${JWT_SECRET:}
+    admin-emails: analyst@example.com
     access-token-ttl: 15m
     refresh-token-ttl: 30d
   kafka:
+    enabled: false
+  redis:
+    enabled: false
+  elasticsearch:
     enabled: false

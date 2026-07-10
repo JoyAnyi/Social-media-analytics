@@ -72,7 +72,7 @@ Spring Boot dependency versions are controlled by the pinned `spring-boot-starte
 | `jjwt-impl` | `0.12.6` | Runtime JWT implementation. | Yes | Runtime-only; paired with `jjwt-api`. |
 | `jjwt-jackson` | `0.12.6` | JSON serialization support for JWT claims. | Yes | Runtime-only; paired with `jjwt-api`. |
 | `postgresql` | Boot BOM | PostgreSQL JDBC driver. | Yes | Official PostgreSQL JDBC driver. |
-| `h2` | Boot BOM, test scope | In-memory database for fast Milestone 1 integration tests. | Yes for tests | Test-only; production uses PostgreSQL. |
+| `h2` | Boot BOM, runtime scope | Local no-Docker standalone database and fast integration-test database. | Yes for standalone/test | Runtime scope is intentional so the backend can run without Docker for local browser/API testing. Production uses PostgreSQL through profile/environment configuration. |
 | `spring-boot-starter-test` | Boot BOM, test scope | JUnit, assertions, and Spring test support. | Yes for tests | Official Spring Boot testing starter. |
 | `spring-security-test` | Boot BOM, test scope | Security-aware integration testing. | Yes for tests | Official Spring Security test support. |
 
@@ -104,3 +104,8 @@ Part 3 production readiness review:
 - Strong password validation uses Jakarta Bean Validation already present through `spring-boot-starter-validation`.
 - Secure headers, CORS, CSRF behavior, and endpoint authorization use Spring Security already present in the project.
 - Docker image choices are official or vendor-published images: Maven, Eclipse Temurin, Node, nginx, PostgreSQL, Redis, Apache Kafka, and Elastic Elasticsearch. Image tags are pinned to concrete versions where practical, but production deployments should evaluate digest pinning as a release-management step.
+
+No-Docker local mode review:
+- No new Maven artifact was introduced; the existing H2 dependency was changed from test scope to runtime scope so the Spring Boot backend can run locally without Docker.
+- The `standalone` profile uses H2, disables Kafka, enables local Swagger, and generates an ephemeral JWT signing key only for that profile when `JWT_SECRET` is not supplied.
+- Frontend REST and WebSocket defaults point to `http://localhost:8080`, allowing Vite or IDE browser previews to talk to the local backend without a proxy or Docker.

@@ -88,3 +88,7 @@ Self-review outcome:
 - Narrowed credential ignore patterns after detecting that a broad `*token*` rule hid refresh token source files.
 - Returned rate-limit failures directly from the servlet filter as structured 429 API errors.
 - Kept rate limiting dependency-free by using existing Spring filter infrastructure and Java concurrency primitives.
+
+No-Docker local mode:
+- Added a `standalone` profile backed by local H2 storage so the backend, Swagger, dashboard API, and WebSocket endpoint can run without Docker.
+- Frontend defaults now target `http://localhost:8080`, which lets Vite or IDE browser previews interact with the local backend directly.

@@ -14,22 +14,27 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
+    private final ConfiguredRoleService configuredRoleService;
 
     public UserService(
             UserRepository userRepository,
             UserMapper userMapper,
             PasswordEncoder passwordEncoder,
-            AuditService auditService
+            AuditService auditService,
+            ConfiguredRoleService configuredRoleService
     ) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.auditService = auditService;
+        this.configuredRoleService = configuredRoleService;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public UserResponse currentUser(UUID userId) {
-        return userMapper.toResponse(findById(userId));
+        User user = findById(userId);
+        configuredRoleService.applyConfiguredRoles(user);
+        return userMapper.toResponse(user);
     }
 
     @Transactional

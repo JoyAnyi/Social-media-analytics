@@ -69,7 +69,7 @@ export interface DashboardSummary {
   activePlatforms: MetricPoint[];
   topUsers: MetricPoint[];
   latestPosts: LatestPostView[];
-  systemHealth: SystemHealthView;
+  systemHealth: SystemHealthView | null;
   generatedAt: string;
 }
 
@@ -79,22 +79,145 @@ export interface RealtimeMessage<T = unknown> {
   timestamp: string;
 }
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
+export interface GeneratePostsPayload {
+  count: number;
+  speed: 'SLOW' | 'MEDIUM' | 'FAST';
+  topic: string;
+}
+
+export interface GeneratedPostsResponse {
+  posts: Array<{
+    externalId: string;
+    platform: string;
+    authorUsername: string;
+    authorDisplayName: string;
+    content: string;
+    hashtags: string[];
+    mentions: string[];
+    language: string;
+    publishedAt: string;
+  }>;
+}
+
+interface ApiErrorResponse {
+  message?: string;
+  validationErrors?: Record<string, string>;
+}
+
+const accessTokenKey = 'socialanalytics.accessToken';
+const refreshTokenKey = 'socialanalytics.refreshToken';
+const userKey = 'socialanalytics.user';
+let refreshInFlight: Promise<boolean> | null = null;
+
+export class ApiClientError extends Error {
+  readonly status: number;
+  readonly validationErrors: Record<string, string>;
+
+  constructor(status: number, message: string, validationErrors: Record<string, string> = {}) {
+    super(message);
+    this.name = 'ApiClientError';
+    this.status = status;
+    this.validationErrors = validationErrors;
+  }
+}
+
+export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? defaultApiBaseUrl();
 
 async function request<T>(path: string, init: RequestInit): Promise<T> {
-  const token = localStorage.getItem('socialanalytics.accessToken');
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...init.headers,
-    },
-  });
+  const response = await fetchWithAuthRetry(path, init, true);
   if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
+    throw await apiErrorFromResponse(response);
   }
   return response.json() as Promise<T>;
+}
+
+async function requestBlob(path: string, init: RequestInit): Promise<Blob> {
+  const response = await fetchWithAuthRetry(path, init, false);
+  if (!response.ok) {
+    throw await apiErrorFromResponse(response);
+  }
+  return response.blob();
+}
+
+async function fetchWithAuthRetry(path: string, init: RequestInit, jsonRequest: boolean): Promise<Response> {
+  const response = await authenticatedFetch(path, init, jsonRequest);
+  if (response.status !== 401 || isAuthPath(path)) {
+    return response;
+  }
+  const refreshed = await refreshSession();
+  if (!refreshed) {
+    return response;
+  }
+  return authenticatedFetch(path, init, jsonRequest);
+}
+
+async function authenticatedFetch(path: string, init: RequestInit, jsonRequest: boolean): Promise<Response> {
+  const token = localStorage.getItem(accessTokenKey);
+  try {
+    return await fetch(`${apiBaseUrl}${path}`, {
+      ...init,
+      headers: {
+        ...(jsonRequest ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init.headers,
+      },
+    });
+  } catch {
+    throw new ApiClientError(0, 'Cannot reach the backend. Confirm Spring Boot is running on http://localhost:8080.');
+  }
+}
+
+async function refreshSession(): Promise<boolean> {
+  const refreshToken = localStorage.getItem(refreshTokenKey);
+  if (!refreshToken) {
+    return false;
+  }
+  if (refreshInFlight) {
+    return refreshInFlight;
+  }
+  const refreshRequest = refreshAccessToken(refreshToken);
+  refreshInFlight = refreshRequest;
+  try {
+    return await refreshRequest;
+  } finally {
+    if (refreshInFlight === refreshRequest) {
+      refreshInFlight = null;
+    }
+  }
+}
+
+async function refreshAccessToken(refreshToken: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!response.ok) {
+      return false;
+    }
+    const auth = await response.json() as AuthResponse;
+    localStorage.setItem(accessTokenKey, auth.accessToken);
+    localStorage.setItem(refreshTokenKey, auth.refreshToken);
+    localStorage.setItem(userKey, JSON.stringify(auth.user));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function isAuthPath(path: string) {
+  return path.startsWith('/api/v1/auth/');
+}
+
+async function apiErrorFromResponse(response: Response) {
+  const fallback = `Request failed with status ${response.status}`;
+  try {
+    const body = await response.json() as ApiErrorResponse;
+    return new ApiClientError(response.status, body.message ?? fallback, body.validationErrors ?? {});
+  } catch {
+    return new ApiClientError(response.status, fallback);
+  }
 }
 
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
@@ -121,4 +244,34 @@ export async function dashboardSummary(): Promise<DashboardSummary> {
   return request<DashboardSummary>('/api/v1/dashboard/summary', {
     method: 'GET',
   });
+}
+
+export async function generatePosts(payload: GeneratePostsPayload): Promise<GeneratedPostsResponse> {
+  return request<GeneratedPostsResponse>('/api/v1/feed/simulator/posts', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function exportCsvReport(): Promise<Blob> {
+  return requestBlob('/api/v1/reports/csv', {
+    method: 'POST',
+  });
+}
+
+export async function exportPdfReport(): Promise<Blob> {
+  return requestBlob('/api/v1/reports/pdf', {
+    method: 'POST',
+  });
+}
+
+function defaultApiBaseUrl() {
+  if (typeof window === 'undefined') {
+    return 'http://localhost:8080';
+  }
+  const localHosts = new Set(['localhost', '127.0.0.1', '::1', '']);
+  if (localHosts.has(window.location.hostname)) {
+    return 'http://localhost:8080';
+  }
+  return `${window.location.protocol}//${window.location.hostname}:8080`;
 }

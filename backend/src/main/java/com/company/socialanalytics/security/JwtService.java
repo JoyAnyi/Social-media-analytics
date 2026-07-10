@@ -79,11 +79,16 @@ public class JwtService {
         if (secret != null && !secret.isBlank()) {
             return secret.getBytes(StandardCharsets.UTF_8);
         }
-        if (Arrays.asList(environment.getActiveProfiles()).contains("test")) {
+        if (hasEphemeralSecretProfile(environment)) {
             byte[] generated = new byte[32];
             new SecureRandom().nextBytes(generated);
             return generated;
         }
         throw new IllegalStateException("JWT_SECRET must be set to at least 32 bytes");
+    }
+
+    private boolean hasEphemeralSecretProfile(Environment environment) {
+        return Arrays.stream(environment.getActiveProfiles())
+                .anyMatch(profile -> profile.equals("test") || profile.equals("standalone"));
     }
 }

@@ -27,6 +27,12 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(404, "Not Found", ex.getMessage(), request.getRequestURI()));
     }
 
+    @ExceptionHandler(ServiceUnavailableException.class)
+    ResponseEntity<ApiError> handleServiceUnavailable(ServiceUnavailableException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiError.of(503, "Service Unavailable", ex.getMessage(), request.getRequestURI()));
+    }
+
     @ExceptionHandler({BadCredentialsException.class, InvalidTokenException.class})
     ResponseEntity<ApiError> handleUnauthorized(RuntimeException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

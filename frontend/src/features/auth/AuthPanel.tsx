@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { login, register, type AuthResponse } from '../../api/client';
+import { ApiClientError, login, register, type AuthResponse } from '../../api/client';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 
@@ -25,8 +25,8 @@ export function AuthPanel({ onAuthenticated }: AuthPanelProps) {
           ? await login({ email, password })
           : await register({ email, password, username, displayName });
       onAuthenticated(response);
-    } catch {
-      setError('Authentication failed. Check the backend is running and credentials are valid.');
+    } catch (caughtError) {
+      setError(authErrorMessage(caughtError));
     } finally {
       setIsSubmitting(false);
     }
@@ -36,7 +36,7 @@ export function AuthPanel({ onAuthenticated }: AuthPanelProps) {
     <section className="rounded-lg border border-line bg-white p-5 shadow-panel">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-ink">Sign in</h2>
+          <h2 className="text-lg font-semibold text-ink">{mode === 'login' ? 'Sign in' : 'Sign up'}</h2>
           <p className="mt-1 text-sm text-muted">Access live social intelligence.</p>
         </div>
         <div className="rounded-md bg-teal-50 p-2 text-brand">
@@ -126,4 +126,16 @@ export function AuthPanel({ onAuthenticated }: AuthPanelProps) {
       </form>
     </section>
   );
+}
+
+function authErrorMessage(caughtError: unknown) {
+  if (caughtError instanceof ApiClientError) {
+    const validationMessages = Object.entries(caughtError.validationErrors)
+      .map(([field, message]) => `${field}: ${message}`);
+    if (validationMessages.length > 0) {
+      return validationMessages.join('. ');
+    }
+    return caughtError.message;
+  }
+  return 'Authentication failed. Please try again.';
 }

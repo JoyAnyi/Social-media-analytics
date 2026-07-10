@@ -68,6 +68,45 @@ Fill `DATABASE_PASSWORD` and `JWT_SECRET` in the copied `.env` files before star
 
 ## Run Locally
 
+### No-Docker Backend
+
+Run the backend without PostgreSQL, Kafka, Redis, or Elasticsearch by using the
+`standalone` profile. This uses a local H2 database under `backend/.local-data`,
+disables Kafka publication/listening, and keeps Swagger enabled for local
+inspection.
+
+```bash
+cd backend
+mvn -Dmaven.repo.local=../.m2-cache spring-boot:run -Dspring-boot.run.profiles=standalone
+```
+
+Open:
+
+- Frontend API target: `http://localhost:8080`
+- Health: `http://localhost:8080/actuator/health`
+- Swagger: `http://localhost:8080/swagger-ui.html`
+
+### Frontend Against Local Backend
+
+The frontend defaults to `http://localhost:8080` for REST and WebSocket calls,
+so it can run from Vite or an IDE browser preview while the standalone backend
+is running.
+
+```bash
+cd frontend
+npm ci --ignore-scripts
+npm rebuild esbuild
+npm run dev
+```
+
+Open `http://localhost:5173`.
+
+If you use IntelliJ IDEA's built-in browser preview/static server, keep the
+backend running on `http://localhost:8080`; the frontend will call the backend
+directly.
+
+### Docker Infrastructure
+
 Start infrastructure only:
 
 ```bash

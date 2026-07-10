@@ -2,6 +2,9 @@ package com.company.socialanalytics.kafka;
 
 import com.company.socialanalytics.feed.PostEventPublisher;
 import com.company.socialanalytics.feed.RawPostEvent;
+import com.company.socialanalytics.common.ServiceUnavailableException;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -19,6 +22,12 @@ class KafkaPostEventPublisher implements PostEventPublisher {
 
     @Override
     public void publishRawPost(RawPostEvent event) {
-        kafkaTemplate.send(kafkaProperties.getRawPostTopic(), event.externalId(), event);
+        try {
+            kafkaTemplate.send(kafkaProperties.getRawPostTopic(), event.externalId(), event)
+                    .orTimeout(10, TimeUnit.SECONDS)
+                    .join();
+        } catch (CompletionException ex) {
+            throw new ServiceUnavailableException("Kafka did not accept the simulated post. Confirm Kafka is running and the posts.raw topic exists.");
+        }
     }
 }

@@ -26,6 +26,10 @@ export function readAccessToken(): string | null {
   return localStorage.getItem(accessKey);
 }
 
+export function persistUser(user: UserResponse) {
+  localStorage.setItem(userKey, JSON.stringify(user));
+}
+
 export function clearSession() {
   localStorage.removeItem(accessKey);
   localStorage.removeItem(refreshKey);

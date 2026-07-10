@@ -4,9 +4,9 @@ import com.company.socialanalytics.audit.AuditService;
 import com.company.socialanalytics.common.InvalidTokenException;
 import com.company.socialanalytics.common.ResourceConflictException;
 import com.company.socialanalytics.security.JwtService;
+import com.company.socialanalytics.user.ConfiguredRoleService;
 import com.company.socialanalytics.user.Role;
 import com.company.socialanalytics.user.RoleName;
-import com.company.socialanalytics.user.RoleRepository;
 import com.company.socialanalytics.user.User;
 import com.company.socialanalytics.user.UserMapper;
 import com.company.socialanalytics.user.UserRepository;
@@ -27,33 +27,33 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthService {
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserMapper userMapper;
     private final AuditService auditService;
+    private final ConfiguredRoleService configuredRoleService;
     private final Clock clock;
     private final Duration refreshTokenTtl;
 
     public AuthService(
             UserRepository userRepository,
-            RoleRepository roleRepository,
             RefreshTokenRepository refreshTokenRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             UserMapper userMapper,
             AuditService auditService,
+            ConfiguredRoleService configuredRoleService,
             Clock clock,
             @Value("${app.security.refresh-token-ttl}") Duration refreshTokenTtl
     ) {
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.userMapper = userMapper;
         this.auditService = auditService;
+        this.configuredRoleService = configuredRoleService;
         this.clock = clock;
         this.refreshTokenTtl = refreshTokenTtl;
     }
@@ -66,8 +66,7 @@ public class AuthService {
         if (userRepository.existsByUsername(request.username())) {
             throw new ResourceConflictException("Username is already in use");
         }
-        Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
-                .orElseGet(() -> roleRepository.save(new Role(RoleName.ROLE_USER, "Standard application user")));
+        Role userRole = configuredRoleService.role(RoleName.ROLE_USER);
         User user = userRepository.save(new User(
                 request.email(),
                 request.username(),
@@ -117,6 +116,7 @@ public class AuthService {
     }
 
     private AuthResponse issueTokens(User user) {
+        configuredRoleService.applyConfiguredRoles(user);
         String refreshToken = UUID.randomUUID() + "." + UUID.randomUUID();
         refreshTokenRepository.save(new RefreshToken(
                 hashToken(refreshToken),

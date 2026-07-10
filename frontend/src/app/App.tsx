@@ -1,12 +1,35 @@
-import { useMemo, useState } from 'react';
-import type { AuthResponse, UserResponse } from '../api/client';
+import { useEffect, useMemo, useState } from 'react';
+import { ApiClientError, currentUser, type AuthResponse, type UserResponse } from '../api/client';
 import { Dashboard } from '../features/dashboard/Dashboard';
 import { AuthPanel } from '../features/auth/AuthPanel';
-import { clearSession, persistSession, readStoredUser } from '../features/auth/authStorage';
+import { clearSession, persistSession, persistUser, readAccessToken, readStoredUser } from '../features/auth/authStorage';
 
 export function App() {
   const storedUser = useMemo(() => readStoredUser(), []);
   const [user, setUser] = useState<UserResponse | null>(storedUser);
+
+  useEffect(() => {
+    if (!readAccessToken()) {
+      return undefined;
+    }
+    let cancelled = false;
+    currentUser()
+      .then((refreshedUser) => {
+        if (!cancelled) {
+          persistUser(refreshedUser);
+          setUser(refreshedUser);
+        }
+      })
+      .catch((caughtError) => {
+        if (!cancelled && caughtError instanceof ApiClientError && caughtError.status === 401) {
+          clearSession();
+          setUser(null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function handleAuthenticated(response: AuthResponse) {
     persistSession(response);
@@ -40,18 +63,6 @@ export function App() {
             <p className="mt-5 text-lg leading-8 text-muted">
               Monitor live post volume, sentiment, trending hashtags, and alert activity from one secure operations dashboard.
             </p>
-          </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {[
-              ['Live posts', '18,420'],
-              ['Sentiment', '46% positive'],
-              ['Trending hashtags', '#ProductLaunch'],
-            ].map(([label, value]) => (
-              <div className="rounded-lg border border-line bg-white p-4 shadow-panel" key={label}>
-                <p className="text-sm font-semibold text-muted">{label}</p>
-                <p className="mt-2 text-xl font-bold">{value}</p>
-              </div>
-            ))}
           </div>
         </section>
         <AuthPanel onAuthenticated={handleAuthenticated} />

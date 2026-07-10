@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "app.security")
 public class SecurityProperties {
     private List<String> corsAllowedOrigins = List.of("http://localhost:5173", "http://localhost:8080");
+    private List<String> adminEmails = List.of();
     private Duration rateLimitWindow = Duration.ofMinutes(1);
     private int loginRateLimit = 10;
     private int registrationRateLimit = 5;
@@ -20,6 +21,14 @@ public class SecurityProperties {
 
     public void setCorsAllowedOrigins(List<String> corsAllowedOrigins) {
         this.corsAllowedOrigins = corsAllowedOrigins;
+    }
+
+    public List<String> getAdminEmails() {
+        return adminEmails;
+    }
+
+    public void setAdminEmails(List<String> adminEmails) {
+        this.adminEmails = adminEmails;
     }
 
     public Duration getRateLimitWindow() {

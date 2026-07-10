@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/socialanalytics}
+    username: ${DATABASE_USERNAME:socialanalytics_app}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET}
+    admin-emails: ${APP_ADMIN_EMAILS:analyst@example.com}
+    cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://*:5173,http://localhost:63342,http://127.0.0.1:63342,http://*:63342,http://localhost:8080}
+    public-docs-enabled: true
+  kafka:
+    enabled: true
+  redis:
+    enabled: true
+  elasticsearch:
+    enabled: true
+  websocket:
+    allowed-origin-patterns: ${WEBSOCKET_ALLOWED_ORIGIN_PATTERNS:http://localhost:5173,http://127.0.0.1:5173,http://*:5173,http://localhost:63342,http://127.0.0.1:63342,http://*:63342,http://localhost:8080}
